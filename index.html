@@ -6,7 +6,7 @@
     <title>يلا talk - النسخة الاحترافية</title>
     <style>
         :root {
-            --bg-color: #040d06; /* اللون الموحد اللي طلبته */
+            --bg-color: #040d06; 
             --gold: #d4af37;
         }
 
@@ -19,7 +19,6 @@
             touch-action: none; user-select: none;
         }
 
-        /* حاوية الكارت بدون أي حواف */
         #game-container {
             position: relative;
             width: 90vw; max-width: 380px; height: 550px;
@@ -35,7 +34,6 @@
 
         img { width: 100%; height: 100%; object-fit: contain; }
 
-        /* أزرار التحكم */
         #start-btn {
             display: none; margin-top: 30px; padding: 15px 45px;
             background: var(--gold); color: #000; font-weight: bold;
@@ -45,20 +43,20 @@
 
         .hint { color: var(--gold); font-size: 0.9rem; opacity: 0.6; margin-top: 20px; text-align: center; }
 
-        /* شاشة النهاية */
         #end-screen { 
             display: none; text-align: center; z-index: 100; 
         }
 
-        /* تأثيرات الحركة (Animations) */
         .swipe-right { transform: translateX(120%) rotate(20deg); opacity: 0; }
         .swipe-left { transform: translateX(-120%) rotate(-20deg); opacity: 0; }
     </style>
 </head>
 <body>
 
+    <!-- عناصر الصوت -->
     <audio id="swipeSound" src="https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3"></audio>
     <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+    <audio id="bgMusic" src="https://files.catbox.moe/3k389p.mp3" loop></audio>
 
     <div id="game-container">
         <div class="card" id="card-element">
@@ -100,47 +98,32 @@
 
         let shuffledDeck = [];
         let currentIndex = -1;
-        let gameStatus = "start"; // start, rules, playing, end
+        let gameStatus = "start"; 
 
-        // دالة لخلط الكروت عشوائياً
-        function shuffle(array) {
-            let currentIndex = array.length, randomIndex;
-            while (currentIndex != 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-            }
-            return array;
-        }
-
-        // منطق اللمس والسحب
         let startX = 0;
         const cardElement = document.getElementById('card-element');
 
         document.addEventListener('touchstart', e => startX = e.touches[0].clientX);
         document.addEventListener('touchend', e => {
             let endX = e.changedTouches[0].clientX;
-            if (startX - endX > 50) handleSwipe("next"); // سحب لليسار
-            if (endX - startX > 50) handleSwipe("prev"); // سحب لليمين
+            if (startX - endX > 50) handleSwipe("next");
+            if (endX - startX > 50) handleSwipe("prev");
         });
-
-        function handleSwipe(dir) {
-            if (gameStatus === "start" && dir === "next") {
-                showRules();
-            } else if (gameStatus === "playing") {
-                if (dir === "next") nextCard();
-                if (dir === "prev") prevCard();
-            }
-        }
 
         function playSfx(id) {
             const s = document.getElementById(id);
             s.currentTime = 0;
-            s.play().catch(e => {});
+            s.play().catch(e => console.log("Audio block: ", e));
         }
 
         function showRules() {
             playSfx('swipeSound');
+            
+            // تشغيل موسيقى الخلفية بمجرد ظهور القوانين
+            const bgMusic = document.getElementById('bgMusic');
+            bgMusic.volume = 0.4; // خفض الصوت قليلاً ليكون مريحاً
+            bgMusic.play().catch(e => console.log("Autoplay prevented by browser: ", e));
+
             cardElement.classList.add('swipe-left');
             setTimeout(() => {
                 document.getElementById('displayImage').src = rulesImg;
@@ -149,6 +132,15 @@
                 document.getElementById('hintText').style.display = "none";
                 gameStatus = "rules";
             }, 400);
+        }
+
+        function handleSwipe(dir) {
+            if (gameStatus === "start" && dir === "next") {
+                showRules();
+            } else if (gameStatus === "playing") {
+                if (dir === "next") nextCard();
+                if (dir === "prev") prevCard();
+            }
         }
 
         function startGame() {
@@ -160,6 +152,16 @@
             gameStatus = "playing";
             currentIndex = 0;
             updateCardDisplay();
+        }
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
         }
 
         function nextCard() {
