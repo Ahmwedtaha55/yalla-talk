@@ -53,10 +53,10 @@
 </head>
 <body>
 
-    <!-- عناصر الصوت -->
     <audio id="swipeSound" src="https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3"></audio>
     <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
-    <audio id="bgMusic" src="https://files.catbox.moe/3k389p.mp3" loop></audio>
+    
+    <audio id="rulesMusic" src="music11.mp3" loop></audio>
 
     <div id="game-container">
         <div class="card" id="card-element">
@@ -99,9 +99,9 @@
         let shuffledDeck = [];
         let currentIndex = -1;
         let gameStatus = "start"; 
-
         let startX = 0;
         const cardElement = document.getElementById('card-element');
+        const rulesMusic = document.getElementById('rulesMusic');
 
         document.addEventListener('touchstart', e => startX = e.touches[0].clientX);
         document.addEventListener('touchend', e => {
@@ -113,16 +113,15 @@
         function playSfx(id) {
             const s = document.getElementById(id);
             s.currentTime = 0;
-            s.play().catch(e => console.log("Audio block: ", e));
+            s.play().catch(e => {});
         }
 
         function showRules() {
             playSfx('swipeSound');
             
-            // تشغيل موسيقى الخلفية بمجرد ظهور القوانين
-            const bgMusic = document.getElementById('bgMusic');
-            bgMusic.volume = 0.4; // خفض الصوت قليلاً ليكون مريحاً
-            bgMusic.play().catch(e => console.log("Autoplay prevented by browser: ", e));
+            // تشغيل الموسيقى عند عرض القوانين
+            rulesMusic.volume = 0.5;
+            rulesMusic.play().catch(e => console.log("تأكد من تسمية ملف الصوت بشكل صحيح في GitHub"));
 
             cardElement.classList.add('swipe-left');
             setTimeout(() => {
@@ -134,17 +133,13 @@
             }, 400);
         }
 
-        function handleSwipe(dir) {
-            if (gameStatus === "start" && dir === "next") {
-                showRules();
-            } else if (gameStatus === "playing") {
-                if (dir === "next") nextCard();
-                if (dir === "prev") prevCard();
-            }
-        }
-
         function startGame() {
             playSfx('clickSound');
+            
+            // إيقاف الموسيقى عند بدء اللعب الفعلي
+            rulesMusic.pause();
+            rulesMusic.currentTime = 0;
+
             shuffledDeck = shuffle([...allQuestions]);
             document.getElementById('start-btn').style.display = "none";
             document.getElementById('hintText').style.display = "block";
@@ -152,6 +147,15 @@
             gameStatus = "playing";
             currentIndex = 0;
             updateCardDisplay();
+        }
+
+        function handleSwipe(dir) {
+            if (gameStatus === "start" && dir === "next") {
+                showRules();
+            } else if (gameStatus === "playing") {
+                if (dir === "next") nextCard();
+                if (dir === "prev") prevCard();
+            }
         }
 
         function shuffle(array) {
