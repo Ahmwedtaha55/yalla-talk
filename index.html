@@ -3,203 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>يلا talk - النسخة الاحترافية</title>
+    <title>يلا talk</title>
     <style>
-        :root {
-            --bg-color: #040d06; 
-            --gold: #d4af37;
-        }
-
+        :root { --dark-bg: #040d06; }
         body { 
-            background-color: var(--bg-color);
-            margin: 0; padding: 0;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100vh; overflow: hidden;
+            background-color: var(--dark-bg); color: #f0f4f0; 
             font-family: 'Segoe UI', sans-serif;
-            touch-action: none; user-select: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100vh; margin: 0; overflow: hidden; user-select: none; touch-action: none; 
         }
-
-        #game-container {
-            position: relative;
-            width: 90vw; max-width: 380px; height: 550px;
-            display: flex; align-items: center; justify-content: center;
+        .card-container { 
+            width: 90vw; max-width: 380px; height: 550px; 
+            display: flex; align-items: center; justify-content: center; 
+            transition: transform 0.3s ease, opacity 0.2s;
+            position: relative; background: transparent;
         }
-
-        .card {
-            position: absolute;
-            width: 100%; height: 100%;
-            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s;
-            display: flex; align-items: center; justify-content: center;
-        }
-
         img { width: 100%; height: 100%; object-fit: contain; }
-
-        #start-btn {
+        #start-game-btn {
             display: none; margin-top: 30px; padding: 15px 45px;
-            background: var(--gold); color: #000; font-weight: bold;
-            border: none; border-radius: 50px; cursor: pointer; font-size: 1.1rem;
-            z-index: 100; box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            background: #d4af37; color: #000; font-weight: bold;
+            border: none; border-radius: 50px; cursor: pointer; font-size: 1.1rem; z-index: 10;
         }
-
-        .hint { color: var(--gold); font-size: 0.9rem; opacity: 0.6; margin-top: 20px; text-align: center; }
-
-        #end-screen { 
-            display: none; text-align: center; z-index: 100; 
-        }
-
-        .swipe-right { transform: translateX(120%) rotate(20deg); opacity: 0; }
-        .swipe-left { transform: translateX(-120%) rotate(-20deg); opacity: 0; }
+        .hint { color: #d4af37; font-size: 0.9rem; opacity: 0.7; margin-top: 20px; }
+        #end-screen { display: none; text-align: center; }
     </style>
 </head>
 <body>
 
-    <audio id="swipeSound" src="https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3"></audio>
-    <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
-    
-    <audio id="rulesMusic" src="music11.mp3" loop></audio>
+    <audio id="clickSound" preload="auto">
+        <source src="click.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="swipeSound" preload="auto">
+        <source src="swipe.mp3" type="audio/mpeg">
+    </audio>
 
-    <div id="game-container">
-        <div class="card" id="card-element">
-            <img id="displayImage" src="https://i.postimg.cc/V6khdCfp/1.png" alt="Yalla Talk">
-        </div>
+    <div id="mainCardContainer" class="card-container">
+        <img id="displayImage" src="https://i.postimg.cc/zB70gvby/1.png" alt="Yalla Talk">
     </div>
 
-    <button id="start-btn" onclick="startGame()">إضغط هنا لتبدأ اللعبة</button>
+    <button id="start-game-btn" onclick="goToQuestions()">إضغط هنا لتبدأ اللعبة</button>
 
     <div id="footer-area">
         <p id="hintText" class="hint">اسحب الكارت لليسار لمعرفة القوانين</p>
     </div>
 
     <div id="end-screen">
-        <h2 style="color:var(--gold)">عاش يا وحش! خلصنا الأسئلة</h2>
-        <button onclick="location.reload()" style="background:none; color:var(--gold); border:1px solid var(--gold); padding:10px 25px; border-radius:50px; cursor:pointer;">إعادة من الأول</button>
+        <h2 style="color:#d4af37">خلصنا الأسئلة!</h2>
+        <button onclick="location.reload()" style="background:none; color:#d4af37; border:1px solid #d4af37; padding:10px 20px; border-radius:50px; margin-top:20px;">إعادة اللعب</button>
     </div>
 
     <script>
-        const startImg = "https://i.postimg.cc/V6khdCfp/1.png";
-        const rulesImg = "https://i.postimg.cc/Kz8WRMGp/2.png";
-        const allQuestions = [
-            "https://i.postimg.cc/JnY2Jztt/3.png", "https://i.postimg.cc/Y9DsgCjh/4.png",
-            "https://i.postimg.cc/fLqrXRkX/5.png", "https://i.postimg.cc/4yKF1Rhx/6.png",
-            "https://i.postimg.cc/d3zNHN8H/7.png", "https://i.postimg.cc/QCRY4Ypn/8.png",
-            "https://i.postimg.cc/j2G3g3Hb/9.png", "https://i.postimg.cc/XqT1H1f4/10.png",
-            "https://i.postimg.cc/bYM5wrKQ/11.png", "https://i.postimg.cc/zDMQGv9x/12.png",
-            "https://i.postimg.cc/0534yjLh/13.png", "https://i.postimg.cc/L47W85rc/14.png",
-            "https://i.postimg.cc/CLqQBYgW/15.png", "https://i.postimg.cc/sgC058fV/16.png",
-            "https://i.postimg.cc/wj542V3W/17.png", "https://i.postimg.cc/YCNDR3jn/18.png",
-            "https://i.postimg.cc/ht8Zsrhk/19.png", "https://i.postimg.cc/Vk9ZgRdc/20.png",
-            "https://i.postimg.cc/R0MsDHHM/21.png", "https://i.postimg.cc/25zcKZZj/22.png",
-            "https://i.postimg.cc/zfJtcggR/23.png", "https://i.postimg.cc/zf0tZGCf/24.png",
-            "https://i.postimg.cc/XvQHSYff/25.png", "https://i.postimg.cc/3RNLKQ1B/26.png",
-            "https://i.postimg.cc/fLyHwQCC/27.png", "https://i.postimg.cc/Y90XpBR8/28.png",
-            "https://i.postimg.cc/Tw1kRv0k/29.png", "https://i.postimg.cc/hjvCSRMt/30.png",
-            "https://i.postimg.cc/cHzFCk5N/31.png"
+        let currentStep = "start"; 
+        let questionIndex = -1;
+        const questions = [
+            "https://i.postimg.cc/Ss1c4MYz/2.png", 
+            "https://i.postimg.cc/d1NGFyZy/3.png", 
+            "https://i.postimg.cc/fbB979KC/4.png"
+            // ضيف باقي الروابط هنا
         ];
 
-        let shuffledDeck = [];
-        let currentIndex = -1;
-        let gameStatus = "start"; 
-        let startX = 0;
-        const cardElement = document.getElementById('card-element');
-        const rulesMusic = document.getElementById('rulesMusic');
+        const startImage = "https://i.postimg.cc/zB70gvby/1.png";
+        const rulesImage = "https://i.postimg.cc/zB70gvby/1.png"; // غيرها لصورة القوانين لما ترفعها
 
-        document.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-        document.addEventListener('touchend', e => {
-            let endX = e.changedTouches[0].clientX;
-            if (startX - endX > 50) handleSwipe("next");
-            if (endX - startX > 50) handleSwipe("prev");
+        let touchstartX = 0;
+        let touchendX = 0;
+        const container = document.getElementById('mainCardContainer');
+
+        // وظيفة تشغيل الصوت مرة واحدة فقط عند الطلب
+        function playEffect(audioId) {
+            const sound = document.getElementById(audioId);
+            sound.pause(); // يوقف أي صوت شغال
+            sound.currentTime = 0; // يرجع البداية
+            sound.play(); // يشغل مرة واحدة
+        }
+
+        container.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; });
+        container.addEventListener('touchend', e => { 
+            touchendX = e.changedTouches[0].screenX; 
+            handleSwipe(); 
         });
 
-        function playSfx(id) {
-            const s = document.getElementById(id);
-            s.currentTime = 0;
-            s.play().catch(e => {});
+        function handleSwipe() {
+            const swipeDistance = touchstartX - touchendX;
+            if (Math.abs(swipeDistance) > 50) { // عشان ميشتغلش من لمسة خفيفة غلط
+                if (swipeDistance > 50) { // سحب يسار (التالي)
+                    if (currentStep === "start") {
+                        currentStep = "rules";
+                        document.getElementById('displayImage').src = rulesImage;
+                        document.getElementById('start-game-btn').style.display = "block";
+                        document.getElementById('hintText').style.display = "none";
+                        playEffect('swipeSound');
+                    } else if (currentStep === "playing") {
+                        nextQuestion();
+                    }
+                } else if (swipeDistance < -50 && currentStep === "playing") { // سحب يمين (السابق)
+                    prevQuestion();
+                }
+            }
         }
 
-        function showRules() {
-            playSfx('swipeSound');
-            
-            // تشغيل الموسيقى عند عرض القوانين
-            rulesMusic.volume = 0.5;
-            rulesMusic.play().catch(e => console.log("تأكد من تسمية ملف الصوت بشكل صحيح في GitHub"));
-
-            cardElement.classList.add('swipe-left');
-            setTimeout(() => {
-                document.getElementById('displayImage').src = rulesImg;
-                cardElement.classList.remove('swipe-left');
-                document.getElementById('start-btn').style.display = "block";
-                document.getElementById('hintText').style.display = "none";
-                gameStatus = "rules";
-            }, 400);
-        }
-
-        function startGame() {
-            playSfx('clickSound');
-            
-            // إيقاف الموسيقى عند بدء اللعب الفعلي
-            rulesMusic.pause();
-            rulesMusic.currentTime = 0;
-
-            shuffledDeck = shuffle([...allQuestions]);
-            document.getElementById('start-btn').style.display = "none";
+        function goToQuestions() {
+            playEffect('clickSound');
+            document.getElementById('start-game-btn').style.display = "none";
+            document.getElementById('hintText').innerText = "اسحب يمين ويسار للتنقل";
             document.getElementById('hintText').style.display = "block";
-            document.getElementById('hintText').innerText = "اسحب لليسار للسؤال التالي | لليمين للسابق";
-            gameStatus = "playing";
-            currentIndex = 0;
-            updateCardDisplay();
+            currentStep = "playing";
+            questionIndex = 0;
+            updateCard();
         }
 
-        function handleSwipe(dir) {
-            if (gameStatus === "start" && dir === "next") {
-                showRules();
-            } else if (gameStatus === "playing") {
-                if (dir === "next") nextCard();
-                if (dir === "prev") prevCard();
-            }
-        }
-
-        function shuffle(array) {
-            let currentIndex = array.length, randomIndex;
-            while (currentIndex != 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-            }
-            return array;
-        }
-
-        function nextCard() {
-            if (currentIndex < shuffledDeck.length - 1) {
-                playSfx('swipeSound');
-                cardElement.classList.add('swipe-left');
-                setTimeout(() => {
-                    currentIndex++;
-                    updateCardDisplay();
-                    cardElement.classList.remove('swipe-left');
-                }, 400);
+        function nextQuestion() {
+            if (questionIndex < questions.length - 1) {
+                questionIndex++;
+                updateCard();
+                playEffect('swipeSound');
             } else {
-                showEnd();
+                showEndScreen();
             }
         }
 
-        function prevCard() {
-            if (currentIndex > 0) {
-                playSfx('swipeSound');
-                cardElement.classList.add('swipe-right');
-                setTimeout(() => {
-                    currentIndex--;
-                    updateCardDisplay();
-                    cardElement.classList.remove('swipe-right');
-                }, 400);
+        function prevQuestion() {
+            if (questionIndex > 0) {
+                questionIndex--;
+                updateCard();
+                playEffect('swipeSound');
             }
         }
 
-        function updateCardDisplay() {
-            document.getElementById('displayImage').src = shuffledDeck[currentIndex];
+        function updateCard() {
+            const img = document.getElementById('displayImage');
+            container.style.opacity = '0';
+            setTimeout(() => {
+                img.src = questions[questionIndex];
+                container.style.opacity = '1';
+            }, 150);
         }
 
-        function showEnd() {
-            document.getElementById('game-container').style.display = "none";
+        function showEndScreen() {
+            container.style.display = "none";
             document.getElementById('footer-area').style.display = "none";
             document.getElementById('end-screen').style.display = "block";
         }
