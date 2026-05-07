@@ -6,127 +6,165 @@
     <title>يلا talk</title>
     <style>
         :root {
-            --dark-bg: #040d06;
-            --forest: #0a1f10;
-            --gold: #d4af37;
-            --white: #f0f4f0;
+            --dark-bg: #040d06; /* اللون الموحد للباك جراوند */
         }
 
         body { 
-            background: radial-gradient(circle, var(--forest) 0%, var(--dark-bg) 100%);
-            color: var(--white); 
+            background-color: var(--dark-bg);
+            color: #f0f4f0; 
             font-family: 'Segoe UI', sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             height: 100vh; margin: 0; overflow: hidden; user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            touch-action: none; /* لمنع اهتزاز الشاشة أثناء السحب */
         }
 
+        /* حاوية الكارت بدون أي حواف أو ألوان محيطة */
         .card-container { 
-            width: 85vw; max-width: 360px; height: 520px; 
-            border-radius: 24px; overflow: hidden; 
+            width: 90vw; max-width: 380px; height: 550px; 
+            overflow: hidden; 
             display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; transition: all 0.4s ease;
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.2s;
             position: relative;
-            background: #000;
+            background: transparent; /* إزالة أي خلفية للكارت نفسه */
         }
 
-        .with-border { border: 2px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
-
-        img { width: 100%; height: 100%; object-fit: cover; }
+        img { width: 100%; height: 100%; object-fit: contain; }
 
         #start-game-btn {
-            display: none; margin-top: 20px; padding: 12px 40px;
-            background: var(--gold); color: #000; font-weight: bold;
+            display: none; margin-top: 30px; padding: 15px 45px;
+            background: #d4af37; color: #000; font-weight: bold;
             border: none; border-radius: 50px; cursor: pointer; font-size: 1.1rem;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            z-index: 10;
         }
 
-        .game-footer { margin-top: 20px; text-align: center; }
-        .hint { color: var(--gold); font-size: 0.9rem; opacity: 0.8; padding: 0 20px; }
+        .hint { color: #d4af37; font-size: 0.9rem; opacity: 0.7; margin-top: 20px; text-align: center; }
         
-        #end-screen { display: none; text-align: center; padding: 20px; }
-        #end-screen h2 { color: var(--gold); font-size: 2rem; margin-bottom: 10px; }
+        #end-screen { display: none; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div id="mainCardContainer" class="card-container" ondblclick="handleLogic()">
+    <audio id="clickSound" src="رابط_صوت_الضغط"></audio>
+    <audio id="swipeSound" src="رابط_صوت_السحب"></audio>
+
+    <div id="mainCardContainer" class="card-container">
         <img id="displayImage" src="https://i.postimg.cc/zB70gvby/1.png" alt="Yalla Talk">
     </div>
 
     <button id="start-game-btn" onclick="goToQuestions()">إضغط هنا لتبدأ اللعبة</button>
 
-    <div class="game-footer" id="footer-area">
-        <p id="hintText" class="hint">اضغط مرتين على الكارت علشان تعرف قوانين اللعبة</p>
+    <div id="footer-area">
+        <p id="hintText" class="hint">اسحب الكارت لليسار لمعرفة القوانين</p>
     </div>
 
     <div id="end-screen">
-        <h2>خلصنا الأسئلة!</h2>
-        <p>يا رب تكون القعدة كانت رايقة في "يلا talk"</p>
-        <button onclick="location.reload()" style="background:none; color:var(--gold); border:1px solid var(--gold); padding:10px 20px; border-radius:50px; cursor:pointer; margin-top:20px;">إعادة اللعب</button>
+        <h2 style="color:#d4af37">خلصنا الأسئلة!</h2>
+        <button onclick="location.reload()" style="background:none; color:#d4af37; border:1px solid #d4af37; padding:10px 20px; border-radius:50px; margin-top:20px;">إعادة اللعب</button>
     </div>
 
     <script>
         let currentStep = "start"; 
-        let questionIndex = 0;
-
-        // مصفوفة الـ 40 سؤال (تم وضع أول 3 روابط والباقي أماكن فاضية لك)
+        let questionIndex = -1; // بدأت من -1 عشان أول سحب يمين يجيب أول سؤال
+        
         const questions = [
             "https://i.postimg.cc/Ss1c4MYz/2.png", 
             "https://i.postimg.cc/d1NGFyZy/3.png", 
             "https://i.postimg.cc/fbB979KC/4.png",
-            "link_4", "link_5", "link_6", "link_7", "link_8", "link_9", "link_10",
-            "link_11", "link_12", "link_13", "link_14", "link_15", "link_16", "link_17", "link_18", "link_19", "link_20",
-            "link_21", "link_22", "link_23", "link_24", "link_25", "link_26", "link_27", "link_28", "link_29", "link_30",
-            "link_31", "link_32", "link_33", "link_34", "link_35", "link_36", "link_37", "link_38", "link_39", "link_40"
+            // ضيف باقي الـ 40 رابط هنا...
         ];
 
-        // حط هنا رابط صورة القوانين
-        const rulesImage = "https://i.postimg.cc/zB70gvby/1.png"; // مؤقتاً نفس صورة البداية لحين رفعك للقوانين
+        const startImage = "https://i.postimg.cc/zB70gvby/1.png";
+        const rulesImage = "رابط_صورة_القوانين"; 
 
-        function handleLogic() {
-            const imgElement = document.getElementById('displayImage');
-            const container = document.getElementById('mainCardContainer');
-            const hintText = document.getElementById('hintText');
+        // منطق السحب (Touch Logic)
+        let touchstartX = 0;
+        let touchendX = 0;
 
-            if (currentStep === "start") {
-                imgElement.src = rulesImage;
-                container.classList.add('with-border');
-                hintText.style.display = "none";
-                document.getElementById('start-game-btn').style.display = "block";
-                currentStep = "rules";
+        const container = document.getElementById('mainCardContainer');
+
+        container.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        });
+
+        container.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function playSound(id) {
+            const sound = document.getElementById(id);
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log("Sound error"));
+        }
+
+        function handleSwipe() {
+            const swipeDistance = touchstartX - touchendX;
+            
+            // سحب لليسار (Next)
+            if (swipeDistance > 50) {
+                if (currentStep === "start") {
+                    showRules();
+                } else if (currentStep === "playing") {
+                    nextQuestion();
+                }
             } 
-            else if (currentStep === "playing") {
-                nextQuestion();
+            // سحب لليمين (Previous)
+            else if (swipeDistance < -50) {
+                if (currentStep === "playing") {
+                    prevQuestion();
+                }
             }
+        }
+
+        function showRules() {
+            playSound('swipeSound');
+            document.getElementById('displayImage').src = rulesImage;
+            document.getElementById('start-game-btn').style.display = "block";
+            document.getElementById('hintText').style.display = "none";
+            currentStep = "rules";
         }
 
         function goToQuestions() {
+            playSound('clickSound');
             document.getElementById('start-game-btn').style.display = "none";
-            document.getElementById('hintText').innerText = "اضغط مرتين لسحب سؤال جديد";
+            document.getElementById('hintText').innerText = "اسحب يمين ويسار للتنقل بين الكروت";
             document.getElementById('hintText').style.display = "block";
             currentStep = "playing";
-            nextQuestion();
+            questionIndex = 0;
+            updateCard();
         }
 
         function nextQuestion() {
-            const imgElement = document.getElementById('displayImage');
-            const container = document.getElementById('mainCardContainer');
-
-            // لو اللينك مش "link_X" يعرضه، لو خلصنا الروابط الحقيقية يروح للنهاية
-            if (questionIndex < questions.length && !questions[questionIndex].startsWith("link_")) {
-                container.style.opacity = '0.5';
-                setTimeout(() => {
-                    imgElement.src = questions[questionIndex];
-                    questionIndex++;
-                    container.style.opacity = '1';
-                }, 200);
+            if (questionIndex < questions.length - 1) {
+                questionIndex++;
+                updateCard();
+                playSound('swipeSound');
             } else {
-                container.style.display = "none";
-                document.getElementById('footer-area').style.display = "none";
-                document.getElementById('end-screen').style.display = "block";
-                currentStep = "end";
+                showEndScreen();
             }
+        }
+
+        function prevQuestion() {
+            if (questionIndex > 0) {
+                questionIndex--;
+                updateCard();
+                playSound('swipeSound');
+            }
+        }
+
+        function updateCard() {
+            const img = document.getElementById('displayImage');
+            container.style.opacity = '0';
+            setTimeout(() => {
+                img.src = questions[questionIndex];
+                container.style.opacity = '1';
+            }, 200);
+        }
+
+        function showEndScreen() {
+            container.style.display = "none";
+            document.getElementById('footer-area').style.display = "none";
+            document.getElementById('end-screen').style.display = "block";
         }
     </script>
 </body>
